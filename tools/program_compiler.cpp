@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <string>
 
-
 struct ProgramHeader {
     uint32_t magic; 
     uint32_t entry_point; 
@@ -12,8 +11,7 @@ struct ProgramHeader {
     uint32_t data_size;
 };
 
-static const uint32_t PROGRAM_MAGIC = 0x4B534150; 
-static const uint32_t PROGRAM_LOAD_ADDRESS = 0x100000;
+static const uint32_t PROGRAM_MAGIC = 0x4B534150; // "PASK"
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -33,7 +31,7 @@ int main(int argc, char* argv[]) {
     
     ProgramHeader header;
     header.magic = PROGRAM_MAGIC;
-    header.entry_point = PROGRAM_LOAD_ADDRESS;
+    header.entry_point = 0;
     header.code_size = code_data.size();
     header.data_size = 0;
     
@@ -44,13 +42,13 @@ int main(int argc, char* argv[]) {
     }
     
     output.write(reinterpret_cast<const char*>(&header), sizeof(header));
-    
     output.write(reinterpret_cast<const char*>(code_data.data()), code_data.size());
     
     output.close();
     
     std::cout << "Program created successfully: " << argv[2] << std::endl;
     std::cout << "Code size: " << header.code_size << " bytes" << std::endl;
+    std::cout << "Entry point offset: " << header.entry_point << std::endl;
     
     return 0;
 }

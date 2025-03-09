@@ -7,6 +7,8 @@ int cmd_position = 0;
 extern "C" uint8_t sample_program_data[];
 extern "C" uint32_t sample_program_size;
 
+extern "C" void isr128();
+
 void process_command(Kernel& kernel, ProgramLoader& loader) {
     command_buffer[cmd_position] = '\0';
     
@@ -42,6 +44,12 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
 }
 
 extern "C" void axio_main() {
+    IDT::Initialize();
+    
+    IDT::SetGate(0x80, (uint32_t)isr128, 0x08, 0x8E);
+
+    asm volatile("sti");
+    
     Kernel kernel;
     Keyboard keyboard;
     ProgramLoader program_loader;

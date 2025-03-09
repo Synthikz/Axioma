@@ -8,5 +8,6 @@
 #include "kernel.h"
 #include "keyboard.h"
 #include "program.h"
+#include "idt.h"
 
 #endif
