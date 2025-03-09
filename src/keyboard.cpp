@@ -1,4 +1,4 @@
-#include "keyboard.h"
+#include <keyboard.h>
 
 Keyboard::Keyboard() : last_key(0), key_released(true) {}
 
@@ -71,9 +71,12 @@ char Keyboard::GetKeyCharacter(const unsigned char scan_code) {
 char Keyboard::GetInput() {
     unsigned char scan_code = 0;
 
-    // Read scan code from keyboard port
-    asm volatile("inb %1, %0" : "=a" (scan_code) : "d" (Addresses::keyboard_port));
+    uint8_t status;
+    do {
+        asm volatile("inb $0x64, %0" : "=a" (status));
+    } while (!(status & 0x01));
     
-    // Process the scan code
+    asm volatile("inb $0x60, %0" : "=a" (scan_code));
+    
     return GetKeyCharacter(scan_code);
 }

@@ -1,7 +1,7 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
-#include "main.h"
+#include <main.h>
 
 class SyscallHandler {
 public:

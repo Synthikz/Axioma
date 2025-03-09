@@ -1,4 +1,4 @@
-#include "main.h"
+#include <main.h>
 
 static const int MAX_CMD_LENGTH = 64;
 char command_buffer[MAX_CMD_LENGTH];
@@ -22,6 +22,10 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
             kernel.PrintString("Failed to load program!\n", LIGHT_RED, BLUE);
         }
     }
+    else if (strcmp(command_buffer, "test") == 0) {
+        kernel.PrintString("\nTest...\n", LIGHT_GREEN, BLUE);
+        asm volatile("sti");
+    }
     else if (strcmp(command_buffer, "clear") == 0) {
         kernel.ClearVideoBuffer(WHITE, BLUE);
         kernel.PrintString("=== Simple C++ Kernel ===\n", YELLOW, BLUE);
@@ -44,12 +48,9 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
 }
 
 extern "C" void axio_main() {
+    // Initialize IDT
     IDT::Initialize();
-    
-    IDT::SetGate(0x80, (uint32_t)isr128, 0x08, 0x8E);
 
-    asm volatile("sti");
-    
     Kernel kernel;
     Keyboard keyboard;
     ProgramLoader program_loader;
@@ -75,6 +76,8 @@ extern "C" void axio_main() {
                 kernel.PrintCharacter(key, WHITE, BLUE);
             }
         }
-        for(volatile int i = 0; i < 10000; i++) {}
+        
+        // Short delay to reduce CPU usage
+        for(volatile int i = 0; i < 5000; i++) {}
     }
 }

@@ -1,7 +1,5 @@
-#include "main.h"
-
-#ifndef LIBC_CPP_INCLUDED
-#define LIBC_CPP_INCLUDED
+#include <libc.h>
+#include <stdint.h>
 
 static uint32_t heap_base = 0x200000;
 static uint32_t heap_top = heap_base;
@@ -103,28 +101,26 @@ extern "C" void free(void* ptr) {
     (void)ptr;
 }
 
-extern "C" void* operator new(size_t size) {
+void* operator new(size_t size) {
     return malloc(size);
 }
 
-extern "C" void* operator new[](size_t size) {
+void* operator new[](size_t size) {
     return malloc(size);
 }
 
-extern "C" void operator delete(void* ptr) noexcept {
+void operator delete(void* ptr) noexcept {
     free(ptr);
 }
 
-extern "C" void operator delete[](void* ptr) noexcept {
+void operator delete[](void* ptr) noexcept {
     free(ptr);
 }
 
-extern "C" void operator delete(void* ptr, size_t) noexcept {
+void operator delete(void* ptr, size_t) noexcept {
     free(ptr);
 }
 
-extern "C" void operator delete[](void* ptr, size_t) noexcept {
+void operator delete[](void* ptr, size_t) noexcept {
     free(ptr);
 }
-
-#endif

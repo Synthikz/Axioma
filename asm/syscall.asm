@@ -5,28 +5,36 @@ extern syscall_interrupt_handler
 
 section .text
 
-; Syscall function for programs to use
 syscall:
-    mov eax, [esp + 4]   ; syscall number
-    mov ebx, [esp + 8]   ; arg1
-    mov ecx, [esp + 12]  ; arg2
-    mov edx, [esp + 16]  ; arg3
+    push ebp
+    mov ebp, esp
+    push ebx
+    push esi
+    push edi
+    
+    mov eax, [ebp + 8]
+    mov ebx, [ebp + 12]
+    mov ecx, [ebp + 16]
+    mov edx, [ebp + 20]
     int 0x80
+    
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
     ret
 
-; Interrupt service routine for syscall (int 0x80)
 isr128:
-    pushad                  ; Push all registers
+    pushad
 
-    ; Call C++ handler
-    push edx                ; arg3
-    push ecx                ; arg2  
-    push ebx                ; arg1
-    push eax                ; syscall number
+    push edx
+    push ecx
+    push ebx
+    push eax
     call syscall_interrupt_handler
-    add esp, 16             ; Clean up arguments
+    add esp, 16
 
-    mov [esp + 28], eax     ; Store return value in the original EAX position on stack
+    mov [esp + 28], eax
 
-    popad                   ; Restore all registers
-    iret                    ; Return from interrupt
+    popad
+    iret

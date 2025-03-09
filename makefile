@@ -4,8 +4,8 @@ CXX = g++
 ASM = nasm
 
 # Compiler flags
-CC_FLAGS = -m32 -c -nostdlib -std=c++11 -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti -fno-stack-protector
-ASM_FLAGS = -felf32
+CC_FLAGS = -g -m32 -c -nostdlib -std=c++11 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti -fno-stack-protector
+ASM_FLAGS = -felf32 -g
 
 # Source files
 CPP_FILES := $(wildcard src/*.cpp)
@@ -25,12 +25,12 @@ PROGRAM_COMPILER := build/program_compiler
 TOOLS_DIR := tools
 
 # All target
-all: $(KERNEL_BIN)
+all: sample-program $(KERNEL_BIN)
 
 # Clean target
 clean:
 	rm -f $(KERNEL_BIN)
-	rm -rf build/out iso
+	rm -rf build iso
 	rm -f $(PROGRAM_COMPILER)
 
 # Create build directories
@@ -50,7 +50,7 @@ build/out/%.o: asm/%.asm | build/out
 
 # Link the kernel
 $(KERNEL_BIN): $(OBJ_FILES) build/out/sample_program.o | build
-	ld -m elf_i386 -nostdlib -T linker/linker.ld -o $@ $^
+	ld -m elf_i386 -nostdlib -T linker/linker.ld -g -o $@ $^
 	chmod +x config/iso.sh
 	./config/iso.sh
 
@@ -85,7 +85,7 @@ run-qemu: $(KERNEL_BIN)
 # Run kernel binary directly in QEMU
 run-qemu-kernel: $(KERNEL_BIN)
 	@echo "Starting QEMU with kernel binary..."
-	qemu-system-i386 -kernel $(KERNEL_BIN)
+	qemu-system-i386 -kernel $(KERNEL_BIN) -gdb tcp::1234
 
 # Tools target to build program compiler and sample program
 tools: $(PROGRAM_COMPILER) sample-program

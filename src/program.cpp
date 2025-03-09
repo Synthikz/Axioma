@@ -1,4 +1,4 @@
-#include "program.h"
+#include <program.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -42,6 +42,7 @@ void ProgramLoader::FreeMemory(void* address) {
     }
 }
 
+
 bool ProgramLoader::LoadProgram(const uint8_t* program_data, uint32_t size) {
     if (size < sizeof(ProgramHeader)) {
         return false;
@@ -57,11 +58,13 @@ bool ProgramLoader::LoadProgram(const uint8_t* program_data, uint32_t size) {
         return false;
     }
     
-    void* load_address = AllocateMemory(expected_size);
+    // Allocate some extra memory for stack (e.g., 16KB)
+    void* load_address = AllocateMemory(expected_size + 16384);
     if (!load_address) {
         return false;
     }
     
+    // Copy the program into memory
     memcpy(load_address, program_data, size);
     current_program = (ProgramHeader*)load_address;
     loaded_program_address = load_address;
@@ -72,26 +75,15 @@ bool ProgramLoader::ExecuteProgram() {
     if (!current_program) {
         return false;
     }
+
+    uint32_t entry_address = reinterpret_cast<uint32_t>(loaded_program_address) + 
+                             sizeof(ProgramHeader) + current_program->entry_point;
     
-    // Calculate the actual entry point address
-    uint32_t entry_address = reinterpret_cast<uint32_t>(loaded_program_address) + sizeof(ProgramHeader);
-    
-    // Use a more robust way to call the program
     typedef void (*EntryPointFunc)();
     EntryPointFunc entry = (EntryPointFunc)entry_address;
-    
-    // Set up a proper execution environment
-    // Save our stack pointer and other registers
-    uint32_t esp_backup;
-    asm volatile ("mov %%esp, %0" : "=r"(esp_backup));
-    
-    // Call the program
+
     entry();
     
-    // Restore our stack pointer
-    asm volatile ("mov %0, %%esp" : : "r"(esp_backup));
-    
-    // Unload the program
     UnloadProgram();
     
     return true;

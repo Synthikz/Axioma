@@ -1,15 +1,17 @@
-#include "idt.h"
+#include <idt.h>
 
 IDTEntry IDT::entries[256];
 IDTPointer IDT::pointer;
+
+extern "C" void isr128();
 
 void IDT::Initialize() {
     pointer.limit = sizeof(IDTEntry) * 256 - 1;
     pointer.base = (uint32_t)&entries;
 
-    for (uint16_t i = 0; i < 256; i++) {
-        SetGate(i, 0, 0, 0);
-    }
+    memset(&entries, 0, sizeof(IDTEntry) * 256);
+
+    SetGate(0x80, (uint32_t)isr128, 0x08, 0x8E);
 
     asm volatile("lidt %0" : : "m" (pointer));
 }

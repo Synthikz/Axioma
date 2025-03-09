@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "../include/main.h"
+#include "../include/color_table.h"
 
 enum SyscallNumber {
     SYS_PRINT = 0,
@@ -27,7 +27,6 @@ void print(const char* message, uint8_t foreground, uint8_t background) {
 char wait_for_key() {
     char key = 0;
     while (!(key = (char)syscall(SYS_READ_CHAR, 0, 0, 0))) {
-        
     }
     return key;
 }
@@ -43,16 +42,19 @@ void clear_screen(uint8_t foreground, uint8_t background) {
 
 extern "C" void _start() {
     clear_screen(YELLOW, BLUE);
-    print("=== Sample Axioma Program ===\n", LIGHT_GREEN, BLUE);
-    print("This program runs in user mode and uses syscalls.\n", WHITE, BLUE);
-    print("\nPress any key to continue...\n", YELLOW, BLUE);
+    
+    print("Hola mundo!\n", LIGHT_GREEN, BLUE);
+    print("Este programa utiliza syscalls para comunicarse con el kernel.\n", WHITE, BLUE);
+    
+    print("\nPresiona cualquier tecla para continuar...\n", YELLOW, BLUE);
     
     wait_for_key();
     
-    print("\nKey pressed! Now I will finish and return to the kernel.\n", LIGHT_CYAN, BLUE);
-    print("Goodbye!\n", LIGHT_PURPLE, BLUE);
+    print("\nTecla presionada!\n", LIGHT_CYAN, BLUE);
+    print("El programa terminará y devolverá el control al kernel.\n", LIGHT_CYAN, BLUE);
+    print("Adiós!\n", LIGHT_PURPLE, BLUE);
     
-    print("\nPress any key to exit...\n", YELLOW, BLUE);
+    print("\nPresiona cualquier tecla para salir...\n", YELLOW, BLUE);
     wait_for_key();
     
     exit_program();

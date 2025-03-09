@@ -1,5 +1,5 @@
-#include "kernel.h"
-#include "addresses.h"
+#include <kernel.h>
+#include <addresses.h>
 
 SyscallHandler* g_syscall_handler = nullptr;
 
@@ -91,7 +91,8 @@ void Kernel::outb(uint16_t port, uint8_t value) {
 }
 
 char Kernel::ReadChar() {
-    return 0;
+    Keyboard kbd;
+    return kbd.GetInput();
 }
 
 uint32_t Kernel::HandleSyscall(uint32_t syscall_number, uint32_t arg1, uint32_t arg2, uint32_t arg3) {

@@ -1,7 +1,7 @@
 #ifndef _PROGRAM_H_
 #define _PROGRAM_H_
 
-#include "main.h"
+#include <main.h>
 
 struct ProgramHeader {
     uint32_t magic;
