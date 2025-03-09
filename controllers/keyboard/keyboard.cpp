@@ -5,28 +5,20 @@ namespace Controllers {
     KeyboardController::KeyboardController() : last_key(0), key_released(true) {}
 
     char KeyboardController::GetKeyCharacter(const unsigned char scan_code) {
-
-        unsigned char port;
-
-        asm volatile(
-            "int $0x80"
-            : "=a" (port)
-            : "a" (1)
-            : "memory"
-        );
-
-        if (scan_code & port) {
+        // Verificar si la tecla fue liberada
+        if (scan_code & 0x80) {
             key_released = true;
             return 0;
         }
 
+        // Ignorar teclas repetidas
         if (scan_code == last_key && !key_released) {
             return 0;
         }
-    
+
         last_key = scan_code;
         key_released = false;
-    
+
         switch(scan_code) {
             case KEYS::A: return 'a';
             case KEYS::B: return 'b';
@@ -77,7 +69,7 @@ namespace Controllers {
             default: return 0;
         }
     }
-    
+
     char KeyboardController::GetInput() {
         unsigned char scan_code = 0;
 
@@ -85,11 +77,10 @@ namespace Controllers {
         do {
             asm volatile("inb $0x64, %0" : "=a" (status));
         } while (!(status & 0x01));
-        
+
         asm volatile("inb $0x60, %0" : "=a" (scan_code));
-        
+
         return GetKeyCharacter(scan_code);
-    
     }
 
 }

@@ -14,7 +14,6 @@ namespace Controllers {
         UpdateCursor();
     }
 
-
     void VGAController::ClearVideoBuffer(uint8_t foreground, uint8_t background) {
         uint8_t color = (foreground & 0x0F) | ((background & 0x0F) << 4);
         for (uint16_t i = 0; i < 25; ++i) {

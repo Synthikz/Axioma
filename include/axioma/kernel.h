@@ -2,6 +2,7 @@
 #define _KERNEL_H_
 
 #include <main.h>
+#include <video/vga.h>  // Add this include for VGAController
 
 enum KernelError {
     ERROR_NONE = 0,
@@ -21,7 +22,8 @@ public:
 class Kernel : public SyscallHandler {
 private:
     KernelError last_error;
-    
+    Controllers::VGAController vga_controller;
+
 public:
     Kernel();
     virtual uint32_t HandleSyscall(uint32_t syscall_number, uint32_t arg1, uint32_t arg2, uint32_t arg3) override;

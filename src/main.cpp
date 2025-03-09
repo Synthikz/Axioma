@@ -9,7 +9,7 @@ extern "C" uint32_t sample_program_size;
 
 extern "C" void isr128();
 
-void process_command(Controllers::VGAController& vga, Controllers::KeyboardController& keyboard, ProgramLoader& loader) {    
+void process_command(Controllers::VGAController& vga, ProgramLoader& loader) {    
     command_buffer[cmd_position] = '\0';
 
     if (strcmp(command_buffer, "run") == 0) {
@@ -77,7 +77,7 @@ extern "C" void axio_main() {
         char key = keyboard.GetInput();
         if (key) {
             if (key == '\n') {
-                process_command(vga, keyboard, program_loader);
+                process_command(vga, program_loader);
             }
             else if (key == '\b') {
                 if (cmd_position > 0) {
