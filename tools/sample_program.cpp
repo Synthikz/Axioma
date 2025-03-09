@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "../include/color_table.h"
+#include "../include/axioma/color_table.h"
 
 enum SyscallNumber {
     SYS_PRINT = 0,
@@ -11,9 +11,12 @@ enum SyscallNumber {
 extern "C" uint32_t syscall(uint32_t number, uint32_t arg1, uint32_t arg2, uint32_t arg3) {
     uint32_t result;
     asm volatile(
-        "int $0x80"
+        "pushl %%ebx\n"
+        "movl %2, %%ebx\n"
+        "int $0x80\n"
+        "popl %%ebx\n"
         : "=a" (result)
-        : "a" (number), "b" (arg1), "c" (arg2), "d" (arg3)
+        : "a" (number), "r" (arg1), "c" (arg2), "d" (arg3)
         : "memory"
     );
     return result;

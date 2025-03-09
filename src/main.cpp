@@ -9,21 +9,21 @@ extern "C" uint32_t sample_program_size;
 
 extern "C" void isr128();
 
-void process_command(Kernel& kernel, ProgramLoader& loader) {
+void process_command(Controllers::VGAController& vga, Controllers::KeyboardController& keyboard, ProgramLoader& loader) {    
     command_buffer[cmd_position] = '\0';
-    
+
     if (strcmp(command_buffer, "run") == 0) {
-        kernel.PrintString("\nRunning sample program...\n", LIGHT_GREEN, BLUE);
+        vga.PrintString("\nRunning sample program...\n", LIGHT_GREEN, BLUE);
         if (loader.LoadProgram(sample_program_data, sample_program_size)) {
             if (!loader.ExecuteProgram()) {
-                kernel.PrintString("Program execution failed!\n", LIGHT_RED, BLUE);
+                vga.PrintString("Program execution failed!\n", LIGHT_RED, BLUE);
             }
         } else {
-            kernel.PrintString("Failed to load program!\n", LIGHT_RED, BLUE);
+            vga.PrintString("Failed to load program!\n", LIGHT_RED, BLUE);
         }
     }
     else if (strcmp(command_buffer, "test") == 0) {
-        kernel.PrintString("\nTesting interrupts...\n", LIGHT_GREEN, BLUE);
+        vga.PrintString("\nTesting interrupts...\n", LIGHT_GREEN, BLUE);
         uint32_t result;
         asm volatile(
             "mov $0, %%eax \n"
@@ -36,60 +36,62 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
             : "memory"
         );
         
-        kernel.PrintString("Syscall test completed\n", LIGHT_GREEN, BLUE);
+        vga.PrintString("Syscall test completed\n", LIGHT_GREEN, BLUE);
     }
     else if (strcmp(command_buffer, "clear") == 0) {
-        kernel.ClearVideoBuffer(WHITE, BLUE);
-        kernel.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
-        kernel.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
+        vga.ClearVideoBuffer(WHITE, BLUE);
+        vga.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
+        vga.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
     }
     else if (strcmp(command_buffer, "help") == 0) {
-        kernel.PrintString("\nAvailable commands:\n", CYAN, BLUE);
-        kernel.PrintString("  run    - Execute the sample program\n", WHITE, BLUE);
-        kernel.PrintString("  clear  - Clear the screen\n", WHITE, BLUE);
-        kernel.PrintString("  help   - Display this help message\n", WHITE, BLUE);
+        vga.PrintString("\nAvailable commands:\n", CYAN, BLUE);
+        vga.PrintString("  run    - Execute the sample program\n", WHITE, BLUE);
+        vga.PrintString("  clear  - Clear the screen\n", WHITE, BLUE);
+        vga.PrintString("  help   - Display this help message\n", WHITE, BLUE);
+        vga.PrintString("  test   - Test syscall interrupts\n", WHITE, BLUE);
     }
     else if (cmd_position > 0) {
-        kernel.PrintString("\nUnknown command: ", LIGHT_RED, BLUE);
-        kernel.PrintString(command_buffer, LIGHT_RED, BLUE);
-        kernel.PrintString("\nType 'help' for available commands\n", LIGHT_RED, BLUE);
+        vga.PrintString("\nUnknown command: ", LIGHT_RED, BLUE);
+        vga.PrintString(command_buffer, LIGHT_RED, BLUE);
+        vga.PrintString("\nType 'help' for available commands\n", LIGHT_RED, BLUE);
     }
     
     cmd_position = 0;
-    kernel.PrintString("\n> ", LIGHT_GREEN, BLUE);
+    vga.PrintString("\n> ", LIGHT_GREEN, BLUE);
 }
 
 extern "C" void axio_main() {
-    IDT::Initialize();
-    // asm volatile("sti"); fuck you sti
-
-    Kernel kernel;
-    Keyboard keyboard;
+    Controllers::KeyboardController keyboard;
+    Controllers::VGAController vga;
     ProgramLoader program_loader;
+    IDT::Initialize();
+
+    vga.ClearVideoBuffer(WHITE, BLUE);
+    vga.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
+    vga.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
+    vga.PrintString("\n> ", LIGHT_GREEN, BLUE);
     
-    kernel.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
-    kernel.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
-    kernel.PrintString("\n> ", LIGHT_GREEN, BLUE);
+    asm volatile("sti");
     
-    while(true) {
+    while (true) {
         char key = keyboard.GetInput();
-        if(key) {
+        if (key) {
             if (key == '\n') {
-                process_command(kernel, program_loader);
+                process_command(vga, keyboard, program_loader);
             }
             else if (key == '\b') {
                 if (cmd_position > 0) {
                     cmd_position--;
-                    kernel.PrintCharacter('\b', WHITE, BLUE);
+                    vga.PrintChar('\b', WHITE, BLUE);
                 }
             }
             else if (cmd_position < MAX_CMD_LENGTH - 1) {
                 command_buffer[cmd_position++] = key;
-                kernel.PrintCharacter(key, WHITE, BLUE);
+                vga.PrintChar(key, WHITE, BLUE);
             }
         }
         
-        // Short delay to reduce CPU usage
-        for(volatile int i = 0; i < 5000; i++) {}
+        // Small delay to reduce CPU usage
+        for (volatile int i = 0; i < 5000; i++) {}
     }
 }

@@ -23,8 +23,7 @@ _start:
     mov esp, stack_top
     extern axio_main ; Kernal Main
     call axio_main
-
-    cli
+    
 .hang: hlt
     jmp .hang 
 .end:

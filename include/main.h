@@ -3,11 +3,13 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <color_table.h>
-#include <addresses.h>
-#include <kernel.h>
-#include <keyboard.h>
-#include <program.h>
-#include <idt.h>
+#include <axioma/color_table.h>
+#include <axioma/addresses.h>
+#include <axioma/kernel.h>
+#include <axioma/program.h>
+#include <axioma/idt.h>
+#include <keyboard/keyboard.h>
+#include <video/vga.h>
+#include <serial/com.h>
 
 #endif
