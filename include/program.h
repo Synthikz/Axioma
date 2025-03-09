@@ -22,9 +22,11 @@ class ProgramLoader {
 private:
     static const uint32_t PROGRAM_LOAD_ADDRESS = 0x100000;
     static const uint32_t MAX_PROGRAM_SIZE = 0x100000;       // 1MB
+    static const uint32_t PROGRAM_STACK_SIZE = 0x4000;       // 16KB
     
     ProgramHeader* current_program;
     void* loaded_program_address;
+    uint32_t program_stack;
     
     static const uint32_t MAX_ALLOCATIONS = 16;
     ProgramAllocation allocations[MAX_ALLOCATIONS];
@@ -32,6 +34,7 @@ private:
     bool ValidateHeader(ProgramHeader* header);
     void* AllocateMemory(uint32_t size);
     void FreeMemory(void* address);
+    bool SetupProgramEnvironment();
     
 public:
     ProgramLoader();

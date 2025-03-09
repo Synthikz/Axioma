@@ -43,18 +43,18 @@ void clear_screen(uint8_t foreground, uint8_t background) {
 extern "C" void _start() {
     clear_screen(YELLOW, BLUE);
     
-    print("Hola mundo!\n", LIGHT_GREEN, BLUE);
-    print("Este programa utiliza syscalls para comunicarse con el kernel.\n", WHITE, BLUE);
+    print("Hello world!\n", LIGHT_GREEN, BLUE);
+    print("This program uses syscalls to communicate with the kernel.\n", WHITE, BLUE);
     
-    print("\nPresiona cualquier tecla para continuar...\n", YELLOW, BLUE);
+    print("\nPress any key to continue...\n", YELLOW, BLUE);
     
     wait_for_key();
     
-    print("\nTecla presionada!\n", LIGHT_CYAN, BLUE);
-    print("El programa terminará y devolverá el control al kernel.\n", LIGHT_CYAN, BLUE);
-    print("Adiós!\n", LIGHT_PURPLE, BLUE);
+    print("\nKey pressed!\n", LIGHT_CYAN, BLUE);
+    print("The program will end and return control to the kernel.\n", LIGHT_CYAN, BLUE);
+    print("Goodbye!\n", LIGHT_PURPLE, BLUE);
     
-    print("\nPresiona cualquier tecla para salir...\n", YELLOW, BLUE);
+    print("\nPress any key to exit...\n", YELLOW, BLUE);
     wait_for_key();
     
     exit_program();

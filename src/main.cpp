@@ -23,12 +23,24 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
         }
     }
     else if (strcmp(command_buffer, "test") == 0) {
-        kernel.PrintString("\nTest...\n", LIGHT_GREEN, BLUE);
-        asm volatile("sti");
+        kernel.PrintString("\nTesting interrupts...\n", LIGHT_GREEN, BLUE);
+        uint32_t result;
+        asm volatile(
+            "mov $0, %%eax \n"
+            "mov $0, %%ebx \n"
+            "mov $0, %%ecx \n"
+            "mov $0, %%edx \n"
+            "int $0x80 \n"
+            : "=a" (result)
+            :
+            : "memory"
+        );
+        
+        kernel.PrintString("Syscall test completed\n", LIGHT_GREEN, BLUE);
     }
     else if (strcmp(command_buffer, "clear") == 0) {
         kernel.ClearVideoBuffer(WHITE, BLUE);
-        kernel.PrintString("=== Simple C++ Kernel ===\n", YELLOW, BLUE);
+        kernel.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
         kernel.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
     }
     else if (strcmp(command_buffer, "help") == 0) {
@@ -48,14 +60,14 @@ void process_command(Kernel& kernel, ProgramLoader& loader) {
 }
 
 extern "C" void axio_main() {
-    // Initialize IDT
     IDT::Initialize();
+    // asm volatile("sti"); fuck you sti
 
     Kernel kernel;
     Keyboard keyboard;
     ProgramLoader program_loader;
     
-    kernel.PrintString("=== Simple C++ Kernel with Syscalls ===\n", YELLOW, BLUE);
+    kernel.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
     kernel.PrintString("Type 'help' for available commands\n", CYAN, BLUE);
     kernel.PrintString("\n> ", LIGHT_GREEN, BLUE);
     

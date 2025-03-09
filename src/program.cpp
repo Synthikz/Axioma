@@ -3,7 +3,7 @@
 #include <string.h>
 
 ProgramLoader::ProgramLoader()
-    : current_program(nullptr), loaded_program_address(nullptr)
+    : current_program(nullptr), loaded_program_address(nullptr), program_stack(0)
 {
     for (uint32_t i = 0; i < MAX_ALLOCATIONS; i++) {
         allocations[i].address = 0;
@@ -13,13 +13,26 @@ ProgramLoader::ProgramLoader()
 }
 
 bool ProgramLoader::ValidateHeader(ProgramHeader* header) {
-    return (header->magic == PROGRAM_MAGIC);
+    if (header->magic != PROGRAM_MAGIC) {
+        return false;
+    }
+    
+    if (header->entry_point >= header->code_size) {
+        return false;
+    }
+    
+    if (header->code_size + header->data_size > MAX_PROGRAM_SIZE - PROGRAM_STACK_SIZE) {
+        return false;
+    }
+    
+    return true;
 }
 
 void* ProgramLoader::AllocateMemory(uint32_t size) {
     if (size > MAX_PROGRAM_SIZE) {
         return nullptr;
     }
+    
     for (uint32_t i = 0; i < MAX_ALLOCATIONS; i++) {
         if (!allocations[i].used) {
             allocations[i].address = PROGRAM_LOAD_ADDRESS + i * MAX_PROGRAM_SIZE;
@@ -42,6 +55,25 @@ void ProgramLoader::FreeMemory(void* address) {
     }
 }
 
+bool ProgramLoader::SetupProgramEnvironment() {
+    if (loaded_program_address) {
+        uint32_t base_address = reinterpret_cast<uint32_t>(loaded_program_address);
+        uint32_t total_program_size = sizeof(ProgramHeader) + 
+                                     current_program->code_size + 
+                                     current_program->data_size;
+
+        program_stack = (base_address + total_program_size + 15) & ~15;
+        
+        if (program_stack + PROGRAM_STACK_SIZE > 
+            base_address + MAX_PROGRAM_SIZE) {
+            return false;
+        }
+        
+        memset(reinterpret_cast<void*>(program_stack), 0, PROGRAM_STACK_SIZE);
+        return true;
+    }
+    return false;
+}
 
 bool ProgramLoader::LoadProgram(const uint8_t* program_data, uint32_t size) {
     if (size < sizeof(ProgramHeader)) {
@@ -58,31 +90,44 @@ bool ProgramLoader::LoadProgram(const uint8_t* program_data, uint32_t size) {
         return false;
     }
     
-    // Allocate some extra memory for stack (e.g., 16KB)
-    void* load_address = AllocateMemory(expected_size + 16384);
+    void* load_address = AllocateMemory(expected_size + PROGRAM_STACK_SIZE);
     if (!load_address) {
         return false;
     }
     
-    // Copy the program into memory
     memcpy(load_address, program_data, size);
     current_program = (ProgramHeader*)load_address;
     loaded_program_address = load_address;
+    
+    if (!SetupProgramEnvironment()) {
+        FreeMemory(load_address);
+        current_program = nullptr;
+        loaded_program_address = nullptr;
+        return false;
+    }
+    
     return true;
 }
 
 bool ProgramLoader::ExecuteProgram() {
-    if (!current_program) {
+    if (!current_program || !loaded_program_address) {
         return false;
     }
 
     uint32_t entry_address = reinterpret_cast<uint32_t>(loaded_program_address) + 
                              sizeof(ProgramHeader) + current_program->entry_point;
     
-    typedef void (*EntryPointFunc)();
-    EntryPointFunc entry = (EntryPointFunc)entry_address;
-
-    entry();
+    uint32_t stack_top = program_stack + PROGRAM_STACK_SIZE;
+    
+    asm volatile(
+        "movl %%esp, %%ebx\n" 
+        "movl %1, %%esp\n" 
+        "call *%0\n"
+        "movl %%ebx, %%esp\n"
+        :
+        : "r"(entry_address), "r"(stack_top)
+        : "ebx", "memory"
+    );
     
     UnloadProgram();
     
@@ -95,6 +140,7 @@ void ProgramLoader::UnloadProgram() {
     }
     current_program = nullptr;
     loaded_program_address = nullptr;
+    program_stack = 0;
 }
 
 void ProgramLoader::ReturnToKernel() {

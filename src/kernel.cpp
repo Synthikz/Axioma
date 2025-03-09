@@ -110,7 +110,7 @@ uint32_t Kernel::HandleSyscall(uint32_t syscall_number, uint32_t arg1, uint32_t 
             return static_cast<uint32_t>(key);
         }
         case 2: {
-            PrintString("\n[Programa finalizado]\n", LIGHT_RED, BLUE);
+            PrintString("\n[Program completed]\n", LIGHT_RED, BLUE);
             return 0;
         }
         case 3: {
