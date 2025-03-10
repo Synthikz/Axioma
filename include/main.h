@@ -11,5 +11,7 @@
 #include <keyboard/keyboard.h>
 #include <video/vga.h>
 #include <serial/com.h>
+#include <axioma/gdt.h>
+#include <axioma/pic.h>
 
 #endif

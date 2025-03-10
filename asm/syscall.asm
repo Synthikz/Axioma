@@ -1,12 +1,15 @@
 global syscall
 global isr128
-global isr8
+global irq1_handler
+
 extern syscall_interrupt_handler
 extern double_fault_handler
+extern default_interrupt_handler
+
+extern keyboard_interrupt_handler
 
 section .text
 
-; --- SYSCALL HANDLER (INT 0x80) ---
 syscall:
     push ebp
     mov ebp, esp
@@ -20,36 +23,42 @@ syscall:
     pop ebp
     ret
 
-; --- INTERRUPT HANDLER (SYSCALL - ISR 128) ---
+irq1_handler:
+    cli
+    pushad
+    call keyboard_interrupt_handler
+    popad
+    sti
+    iret
+
 isr128:
-    cli                  ; Disable interrupts
+    cli          
     push ebp            
     mov ebp, esp
-    sub esp, 16         ; Align stack
-    pushad              ; Save all registers
+    sub esp, 16       
+    pushad        
     
-    push edx            ; Push syscall arguments
+    push edx      
     push ecx
     push ebx
     push eax
     
     call syscall_interrupt_handler
     
-    add esp, 16         ; Clean up arguments
+    add esp, 16  
     
-    popad               ; Restore registers
+    popad       
     mov esp, ebp
     pop ebp
-    sti                 ; Re-enable interrupts
+    sti          
     iret
 
-; --- DOUBLE FAULT HANDLER (INT 8) ---
 isr8:
-    cli                  ; Deshabilitar interrupciones
-    push ebp             ; Save EBP for stack alignment
-    mov ebp, esp         ; Set EBP to current stack pointer
-    pushad               ; Guardar el estado de la CPU
+    cli   
+    push ebp  
+    mov ebp, esp  
+    pushad     
     call double_fault_handler
     popad
-    pop ebp              ; Restore EBP
-    hlt                  ; Detener el sistema (double fault es crítico)
+    pop ebp        
+    hlt             

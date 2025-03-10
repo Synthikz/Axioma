@@ -2,7 +2,7 @@
 #define _KERNEL_H_
 
 #include <main.h>
-#include <video/vga.h>  // Add this include for VGAController
+#include <video/vga.h>
 
 enum KernelError {
     ERROR_NONE = 0,

@@ -1,17 +1,17 @@
 #include <keyboard/keyboard.h>
+#include <serial/com.h>
+#include <video/vga.h>
 
 namespace Controllers {
 
     KeyboardController::KeyboardController() : last_key(0), key_released(true) {}
 
     char KeyboardController::GetKeyCharacter(const unsigned char scan_code) {
-        // Verificar si la tecla fue liberada
         if (scan_code & 0x80) {
             key_released = true;
             return 0;
         }
 
-        // Ignorar teclas repetidas
         if (scan_code == last_key && !key_released) {
             return 0;
         }
@@ -81,6 +81,16 @@ namespace Controllers {
         asm volatile("inb $0x60, %0" : "=a" (scan_code));
 
         return GetKeyCharacter(scan_code);
+    }
+
+    extern "C" void keyboard_interrupt_handler() {
+        Controllers::KeyboardController keyboard;
+        char key = keyboard.GetInput();
+        if (key) {
+            Controllers::VGAController vga;
+            vga.PrintChar(key, WHITE, BLUE);
+        }
+        Controllers::PIC::SendEOI(1);
     }
 
 }

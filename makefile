@@ -10,7 +10,7 @@ ASM_FLAGS = -felf32 -g
 # Source files
 SRC_CPP_FILES := $(wildcard src/*.cpp)
 CTRL_CPP_FILES := $(wildcard controllers/*/*.cpp)
-ASM_FILES := asm/boot.asm asm/syscall.asm
+ASM_FILES := asm/boot.asm asm/syscall.asm asm/gdt_flush.asm asm/idt_flush.asm
 
 # Object files (in build/out)
 OBJ_FILES := $(patsubst src/%.cpp,build/out/%.o,$(SRC_CPP_FILES)) \

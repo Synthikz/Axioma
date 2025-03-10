@@ -64,7 +64,9 @@ extern "C" void axio_main() {
     Controllers::KeyboardController keyboard;
     Controllers::VGAController vga;
     ProgramLoader program_loader;
+    GDT::Initialize();
     IDT::Initialize();
+    Controllers::PIC::Remap();
 
     vga.ClearVideoBuffer(WHITE, BLUE);
     vga.PrintString("=== Axioma Simple C++ Kernel ===\n", YELLOW, BLUE);
