@@ -63,7 +63,9 @@ void process_command(Controllers::VGAController& vga, ProgramLoader& loader) {
 extern "C" void axio_main() {
     Controllers::KeyboardController keyboard;
     Controllers::VGAController vga;
+    Kernel kernel;
     ProgramLoader program_loader;
+    
     GDT::Initialize();
     IDT::Initialize();
     Controllers::PIC::Remap();

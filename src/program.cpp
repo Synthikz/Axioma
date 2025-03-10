@@ -1,6 +1,14 @@
 #include <axioma/program.h>
 #include <stdint.h>
 #include <string.h>
+#include <serial/com.h> 
+
+static void ReportError(const char* msg, uint32_t code) {
+    Controllers::SerialController serial;
+    serial.WriteString(msg);
+    serial.WriteHEX(code);
+    serial.WriteString("\n");
+}
 
 ProgramLoader::ProgramLoader()
     : current_program(nullptr), loaded_program_address(nullptr), program_stack(0)
@@ -14,14 +22,17 @@ ProgramLoader::ProgramLoader()
 
 bool ProgramLoader::ValidateHeader(ProgramHeader* header) {
     if (header->magic != PROGRAM_MAGIC) {
+        ReportError("Error: Invalid program header (magic mismatch). Magic: ", header->magic);
         return false;
     }
     
     if (header->entry_point >= header->code_size) {
+        ReportError("Error: Entry point exceeds code size. Entry: ", header->entry_point);
         return false;
     }
     
     if (header->code_size + header->data_size > MAX_PROGRAM_SIZE - PROGRAM_STACK_SIZE) {
+        ReportError("Error: Program code and data exceed allowed size. Size: ", header->code_size + header->data_size);
         return false;
     }
     
@@ -62,75 +73,67 @@ bool ProgramLoader::SetupProgramEnvironment() {
                                      current_program->code_size + 
                                      current_program->data_size;
 
-        program_stack = (base_address + total_program_size + 15) & ~15;
+        uint32_t stack_base = (base_address + total_program_size + 15) & ~15;
         
-        if (program_stack + PROGRAM_STACK_SIZE > 
-            base_address + MAX_PROGRAM_SIZE) {
+        if (stack_base + PROGRAM_STACK_SIZE > base_address + MAX_PROGRAM_SIZE) {
+            ReportError("Error: Not enough memory for program stack. Base address: ", base_address);
             return false;
         }
         
-        memset(reinterpret_cast<void*>(program_stack), 0, PROGRAM_STACK_SIZE);
+        memset(reinterpret_cast<void*>(stack_base), 0, PROGRAM_STACK_SIZE);
+        program_stack = stack_base + PROGRAM_STACK_SIZE;
         return true;
     }
     return false;
 }
 
 bool ProgramLoader::LoadProgram(const uint8_t* program_data, uint32_t size) {
-    if (size < sizeof(ProgramHeader)) {
+    if (!program_data || size < sizeof(ProgramHeader)) {
+        ReportError("Invalid program data or size", 1);
         return false;
     }
-    
-    ProgramHeader* header = (ProgramHeader*)program_data;
-    if (!ValidateHeader(header)) {
-        return false;
-    }
-    
-    uint32_t expected_size = sizeof(ProgramHeader) + header->code_size + header->data_size;
-    if (size < expected_size) {
-        return false;
-    }
-    
-    void* load_address = AllocateMemory(expected_size + PROGRAM_STACK_SIZE);
+
+    UnloadProgram();
+
+    void* load_address = AllocateMemory(size + PROGRAM_STACK_SIZE);
     if (!load_address) {
+        ReportError("Memory allocation failed", 2);
         return false;
     }
-    
     memcpy(load_address, program_data, size);
     current_program = (ProgramHeader*)load_address;
     loaded_program_address = load_address;
-    
+
     if (!SetupProgramEnvironment()) {
-        FreeMemory(load_address);
-        current_program = nullptr;
-        loaded_program_address = nullptr;
+        UnloadProgram();
         return false;
     }
-    
+
     return true;
 }
 
 bool ProgramLoader::ExecuteProgram() {
-    if (!current_program || !loaded_program_address) {
+    if (loaded_program_address == nullptr || current_program == nullptr) {
+        ReportError("Error: Program not loaded properly. Code: ", 2);
         return false;
     }
 
-    uint32_t entry_address = reinterpret_cast<uint32_t>(loaded_program_address) + 
-                             sizeof(ProgramHeader) + current_program->entry_point;
-    
-    uint32_t stack_top = program_stack + PROGRAM_STACK_SIZE;
-    
+    typedef void (*EntryPoint)();
+    EntryPoint entry = (EntryPoint)((uint8_t*)loaded_program_address + sizeof(ProgramHeader) + current_program->entry_point);
+
+    uint32_t kernel_stack;
+    asm volatile("mov %%esp, %0" : "=r"(kernel_stack));
+
     asm volatile(
-        "movl %%esp, %%ebx\n" 
-        "movl %1, %%esp\n" 
-        "call *%0\n"
-        "movl %%ebx, %%esp\n"
-        :
-        : "r"(entry_address), "r"(stack_top)
-        : "ebx", "memory"
+        "mov %0, %%esp \n"
+        "call *%1     \n"
+        "mov %2, %%esp \n"
+        : 
+        : "r"(program_stack), "r"(entry), "r"(kernel_stack)
+        : "memory"
     );
-    
-    UnloadProgram();
-    
+
+    ReturnToKernel();
     return true;
 }
 

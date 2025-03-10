@@ -11,12 +11,9 @@ enum SyscallNumber {
 extern "C" uint32_t syscall(uint32_t number, uint32_t arg1, uint32_t arg2, uint32_t arg3) {
     uint32_t result;
     asm volatile(
-        "pushl %%ebx\n"
-        "movl %2, %%ebx\n"
-        "int $0x80\n"
-        "popl %%ebx\n"
+        "int $0x80"
         : "=a" (result)
-        : "a" (number), "r" (arg1), "c" (arg2), "d" (arg3)
+        : "a" (number), "b" (arg1), "c" (arg2), "d" (arg3)
         : "memory"
     );
     return result;
@@ -45,20 +42,6 @@ void clear_screen(uint8_t foreground, uint8_t background) {
 
 extern "C" void _start() {
     clear_screen(YELLOW, BLUE);
-    
-    print("Hello world!\n", LIGHT_GREEN, BLUE);
-    print("This program uses syscalls to communicate with the kernel.\n", WHITE, BLUE);
-    
-    print("\nPress any key to continue...\n", YELLOW, BLUE);
-    
-    wait_for_key();
-    
-    print("\nKey pressed!\n", LIGHT_CYAN, BLUE);
-    print("The program will end and return control to the kernel.\n", LIGHT_CYAN, BLUE);
-    print("Goodbye!\n", LIGHT_PURPLE, BLUE);
-    
-    print("\nPress any key to exit...\n", YELLOW, BLUE);
-    wait_for_key();
-    
+    print("Hello World!\n", WHITE, BLUE);
     exit_program();
 }

@@ -15,7 +15,6 @@ namespace Controllers {
     }
 
     void VGAController::ClearVideoBuffer(uint8_t foreground, uint8_t background) {
-        uint8_t color = (foreground & 0x0F) | ((background & 0x0F) << 4);
         for (uint16_t i = 0; i < 25; ++i) {
             for (uint16_t j = 0; j < 80; ++j) {
                 video_buffer[i * 80 + j] = VideoEntry(' ', foreground, background);
@@ -75,8 +74,7 @@ namespace Controllers {
     }
 
     uint16_t VGAController::VideoEntry(char character, uint8_t foreground, uint8_t background) {
-        uint16_t fg = foreground & 0x0F;
-        uint16_t bg = (background & 0x0F) << 4;
-        return static_cast<uint16_t>(character) | ((fg | bg) << 8);
+        uint8_t attribute = ((background & 0x0F) << 4) | (foreground & 0x0F);
+        return static_cast<uint16_t>(character) | (static_cast<uint16_t>(attribute) << 8);
     }
 }

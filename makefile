@@ -71,7 +71,7 @@ $(PROGRAM_COMPILER): $(TOOLS_DIR)/program_compiler.cpp | build
 	$(CXX) -o $@ $<
 
 build/sample.bin: $(TOOLS_DIR)/sample_program.cpp | build
-	$(CC) -m32 -c -nostdlib -ffreestanding -O2 -fno-pic -fno-pie -o build/sample.o $<
+	$(CC) -m32 -c -nostdlib -ffreestanding -O2 -fno-pie -fno-stack-protector -o build/sample.o $<
 	ld -m elf_i386 -nostdlib -T linker/sample_program.ld --oformat binary -o build/sample.bin build/sample.o
 
 build/sample.pask: build/sample.bin $(PROGRAM_COMPILER) | build

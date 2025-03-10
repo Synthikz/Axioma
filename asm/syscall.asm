@@ -32,25 +32,24 @@ irq1_handler:
     iret
 
 isr128:
-    cli          
-    push ebp            
-    mov ebp, esp
-    sub esp, 16       
+    cli
     pushad        
-    
-    push edx      
-    push ecx
-    push ebx
-    push eax
-    
+    mov eax, [esp + 32]    ; syscall number
+    mov ebx, [esp + 36]    ; arg1
+    mov ecx, [esp + 40]    ; arg2
+    mov edx, [esp + 44]    ; arg3
+
+    push edx               ; arg3
+    push ecx               ; arg2
+    push ebx               ; arg1
+    push eax               ; syscall number
     call syscall_interrupt_handler
-    
-    add esp, 16  
-    
-    popad       
-    mov esp, ebp
-    pop ebp
-    sti          
+    add esp, 16 
+
+    mov [esp + 28], eax 
+
+    popad
+    sti
     iret
 
 isr8:
@@ -61,4 +60,4 @@ isr8:
     call double_fault_handler
     popad
     pop ebp        
-    hlt             
+    hlt

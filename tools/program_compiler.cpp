@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     
     ProgramHeader header;
     header.magic = PROGRAM_MAGIC;
-    header.entry_point = 0;
+    header.entry_point = 0x0;
     header.code_size = code_data.size();
     header.data_size = 0;
     

@@ -16,7 +16,7 @@ extern "C" void double_fault_handler(uint32_t int_no) {
     serial.WriteString("Double Fault Detected!\n");
     serial.WriteHEX(int_no);
 
-    while (1) { __asm__("hlt"); } // Detener la CPU
+    while (1) { __asm__("hlt"); }
 }
 
 extern "C" void default_interrupt_handler(uint32_t int_no) {
@@ -34,8 +34,11 @@ void IDT::Initialize() {
     pointer.base = (uint32_t)&entries;
 
     memset(&entries, 0, sizeof(IDTEntry) * 256);
-    SetGate(33, (uint32_t)irq1_handler, 0x08, 0x8E);
+    
     SetGate(0x80, (uint32_t)isr128, 0x08, 0x8E);
+    
+    SetGate(33, (uint32_t)irq1_handler, 0x08, 0x8E);
+    
     idt_flush((uint32_t)&pointer);
 }
 
